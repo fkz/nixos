@@ -139,18 +139,7 @@
       preFixup = prev.preFixup + ''gappsWrapperArgs+=(--set LANGUAGE de_DE.UTF-8)'';
     }))
     ncdu
-    (code-cursor.overrideAttrs (prev: cur: {
-      version = "2.0.34";
-      src = pkgs.appimageTools.extract {
-        pname = prev.pname;
-        version = cur.version;
-        src = pkgs.fetchurl {
-          url = "https://downloads.cursor.com/production/45fd70f3fe72037444ba35c9e51ce86a1977ac11/linux/x64/Cursor-2.0.34-x86_64.AppImage";
-          hash = "sha256-x51N2BttMkfKwH4/Uxn/ZNFVPZbaNdsZm8BFFIMmxBM=";
-        };
-        sourceRoot = "${cur.pname}-${cur.version}-extracted/usr/share/cursor";
-      };
-    }))
+    code-cursor
     glab
     signal-desktop
     git
