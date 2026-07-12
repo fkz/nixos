@@ -8,12 +8,14 @@
     #nixos-hardware.url = "github:fkz/nixos-hardware/master";
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     nixos-hardware.inputs.nixpkgs.follows = "nixpkgs";
+    hermes-agent.url = "github:fkz/hermes-agent";
+    hermes-agent.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs = inputs@{ self, nixpkgs, nixos-hardware, ... }: {
     # NOTE: 'nixos' is the default hostname
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; };
       modules = [ ./configuration.nix nixos-hardware.nixosModules.framework-amd-ai-300-series ];
     };
   };
 }
-
