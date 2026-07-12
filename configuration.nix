@@ -10,6 +10,21 @@
       ./hardware-configuration.nix
     ];
 
+  security.pam.loginLimits = [
+    {
+      domain = "fabian";   # your username
+      type = "soft";
+      item = "memlock";
+      value = "unlimited";
+    }
+    {
+      domain = "fabian";
+      type = "hard";
+      item = "memlock";
+      value = "unlimited";
+    }
+  ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -17,10 +32,21 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
+  boot.kernelParams = [
+    "amd_iommu=off"
+    "amdgpu.gttsize=91136"
+  ];
+
   boot.extraModprobeConfig = ''
-    options ttm page_pool_size=17825792
-    options ttm pages_limit=17825792
+    options ttm pages_limit=32505856
+    options ttm page_pool_size=32505856
   '';
+
+
+  #boot.extraModprobeConfig = ''
+  #  options ttm page_pool_size=17825792
+  #  options ttm pages_limit=17825792
+  #'';
 
   # networking.hostName = "nixos"; # Define your hostname.
   # Pick only one of the below networking options.
@@ -50,6 +76,8 @@
     user = "fabian";
     enable = true;
   };
+
+  services.tailscale.enable = true;
   
 
   # Configure keymap in X11
@@ -88,8 +116,13 @@
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "discord" "clion" "spotify" "claude-code" "cursor"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli"
     ];
+
+    permittedInsecurePackages = [
+      "electron-39.8.10"
+    ];
+
   };
 
   environment.etc."systemd/system-sleep/fingerprint-reset" = {
@@ -128,11 +161,11 @@
   environment.systemPackages = with pkgs; [
     amp-cli
     vim
-    jetbrains.clion
+    # jetbrains.clion
     gparted
     wget
     kdePackages.kdevelop
-    #vscode
+    vscode
     android-studio
     firefox
     htop
@@ -143,8 +176,11 @@
     code-cursor
     glab
     signal-desktop
+    logseq
+    # (import ./audacity.nix { inherit pkgs; })
     git
     git-lfs
+    vlc
     (keepassxc.overrideAttrs (finalAttrs: prevAttrs: {
       version = "331a2de136398f733136c51f1badae5d154878bc";
       src = prevAttrs.src.override {
@@ -152,6 +188,26 @@
         rev = finalAttrs.version;
         tag = null;
       };
+
+      patches = prevAttrs.patches ++ [
+        (pkgs.writeText "botan.patch" ''
+          diff --git a/src/sshagent/OpenSSHKeyGen.cpp b/src/sshagent/OpenSSHKeyGen.cpp
+          index a3d88807fb..6212cd0e9d 100644
+          --- a/src/sshagent/OpenSSHKeyGen.cpp
+          +++ b/src/sshagent/OpenSSHKeyGen.cpp
+          @@ -24,6 +24,10 @@
+           #include <botan/ecdsa.h>
+           #include <botan/ed25519.h>
+           #include <botan/rsa.h>
+          +#include <botan/version.h>
+          +#if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(3,11,0)
+          +  #include <botan/ec_group.h>
+          +#endif
+
+           namespace OpenSSHKeyGen
+           {
+        '')
+      ];
 
       buildInputs = prevAttrs.buildInputs ++ [keyutils];
     }))
@@ -164,16 +220,21 @@
     nextcloud-client
     binutils
     gdb
+    keepass-diff
     kdePackages.partitionmanager
     gnumake
     calibre
+    codex
+    gh
     libreoffice
     cmake
+    ghostty
     zed-editor
     lldb
     jetbrains.idea-oss
     zls
     thunderbird
+    wireshark
     kdePackages.pim-sieve-editor
     kdePackages.kdenlive
     element-desktop
@@ -218,7 +279,7 @@
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 8080 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
