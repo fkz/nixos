@@ -4,6 +4,10 @@
 
 { config, inputs, lib, pkgs, ... }:
 
+let
+  unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+in
+
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -224,7 +228,7 @@
     kdePackages.partitionmanager
     gnumake
     calibre
-    codex
+    unstablePkgs.codex
     gh
     libreoffice
     cmake
