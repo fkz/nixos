@@ -243,7 +243,7 @@ in
     kdePackages.kdenlive
     element-desktop
     discord
-    llama-cpp-vulkan
+    unstablePkgs.llama-cpp-vulkan
     ntfs3g
     spotify
     claude-code
