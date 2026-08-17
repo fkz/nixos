@@ -176,6 +176,7 @@ in
     (gnucash.overrideAttrs (prev: {
       preFixup = prev.preFixup + ''gappsWrapperArgs+=(--set LANGUAGE de_DE.UTF-8)'';
     }))
+    telegram-desktop
     ncdu
     code-cursor
     glab
