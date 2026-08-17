@@ -120,7 +120,7 @@ in
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea"
     ];
 
     permittedInsecurePackages = [
