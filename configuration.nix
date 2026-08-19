@@ -250,7 +250,7 @@ in
       src = previous.src.override {
         hash = lib.fakeHash;
       };
-    })})
+    });})
     ntfs3g
     spotify
     claude-code
