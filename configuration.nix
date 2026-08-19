@@ -247,7 +247,7 @@ in
     (unstablePkgs.llama-cpp-vulkan.overrideAttrs (previous: {
       version = "10488";
       src = previous.src.override {
-        hash = lib.fakeHash;
+        hash = "sha256-ZH5BEjkT+dn8NuZPOLFsXraT64GkguHCWMCsHdJANog=";
       };
     }))
     ntfs3g
