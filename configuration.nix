@@ -230,6 +230,7 @@ in
     calibre
     unstablePkgs.codex
     gh
+    nixd
     libreoffice
     cmake
     ghostty
@@ -243,7 +244,12 @@ in
     kdePackages.kdenlive
     element-desktop
     discord
-    unstablePkgs.llama-cpp-vulkan
+    (unstablePkgs.llama-cpp-vulkan.override (previous: {
+      version = "10488";
+      src = previous.src.override {
+        hash = lib.fakeHash;
+      };
+    }))
     ntfs3g
     spotify
     claude-code
