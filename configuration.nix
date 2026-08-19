@@ -244,12 +244,13 @@ in
     kdePackages.kdenlive
     element-desktop
     discord
-    (unstablePkgs.llama-cpp-vulkan.override (previous: {
+    (unstablePkgs.llama-cpp-vulkan.override {
+      llama-cpp = unstablePkgs.llama-cpp.override (previous: {
       version = "10488";
       src = previous.src.override {
         hash = lib.fakeHash;
       };
-    }))
+    })})
     ntfs3g
     spotify
     claude-code
