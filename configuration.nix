@@ -6,6 +6,7 @@
 
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  chatgpt = pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { };
 in
 
 {
@@ -119,7 +120,7 @@ in
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt"
     ];
 
     permittedInsecurePackages = [
@@ -229,6 +230,7 @@ in
     gnumake
     calibre
     unstablePkgs.codex
+    chatgpt
     gh
     nixd
     libreoffice

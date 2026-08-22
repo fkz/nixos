@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "chatgpt-pr": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787160460,
+        "narHash": "sha256-/p+LoTmjalDgyS3+cWPibC+ux3OdtTz+wAt5RXgu0yc=",
+        "owner": "Moraxyc",
+        "repo": "nixpkgs",
+        "rev": "a5c6f71033566af345b0fd8a02c864d0152be797",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Moraxyc",
+        "ref": "chatgpt-linux",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -172,6 +189,7 @@
     },
     "root": {
       "inputs": {
+        "chatgpt-pr": "chatgpt-pr",
         "hermes-agent": "hermes-agent",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
