@@ -6,13 +6,23 @@
 
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
-  chatgpt = pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { };
 
   overrideVersionWhenLower = drv: version: fn:
-    if builtins.compareVersion version drv.version == 1 then
+    if builtins.compareVersions version drv.version == 1 then
       fn drv
     else
       drv;
+
+  chatgpt = overrideVersionWhenLower
+    (pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { })
+    "26.818.41705"
+    (d: d.overrideAttrs (_: {
+      version = "26.818.41705";
+      src = pkgs.fetchurl {
+        url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.818.41705_amd64.deb";
+        hash = "sha256-ySfJhVd73luszsx38C4UsxHZTmIwFWYh+vkleawDalU=";
+      };
+    }));
 
   llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan "10488" (
     d: d.overrideAttrs (previous: {
