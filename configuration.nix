@@ -7,6 +7,21 @@
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   chatgpt = pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { };
+
+  overrideVersionWhenLower = drv: version: fn:
+    if builtins.compareVersion version drv.version == 1 then
+      fn drv
+    else
+      drv;
+
+  llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan "10488" (
+    d: d.overrideAttrs (previous: {
+      version = "10488";
+      src = previous.src.override {
+        hash = "sha256-ZH5BEjkT+dn8NuZPOLFsXraT64GkguHCWMCsHdJANog=";
+      };
+    })
+  );
 in
 
 {
@@ -246,12 +261,7 @@ in
     kdePackages.kdenlive
     element-desktop
     discord
-    (unstablePkgs.llama-cpp-vulkan.overrideAttrs (previous: {
-      version = "10488";
-      src = previous.src.override {
-        hash = "sha256-ZH5BEjkT+dn8NuZPOLFsXraT64GkguHCWMCsHdJANog=";
-      };
-    }))
+    llama-cpp-vulkan
     ntfs3g
     spotify
     claude-code
