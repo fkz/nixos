@@ -63,6 +63,7 @@ in
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelParams = [
+    "amd_iommu=off"
     "amdgpu.gttsize=91136"
   ];
 
