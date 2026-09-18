@@ -13,7 +13,7 @@ let
     else
       drv;
 
-  chatgpt = overrideVersionWhenLower
+  chatgpt = (overrideVersionWhenLower
     (pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { })
     "26.915.31029"
     (d: d.overrideAttrs (_: {
@@ -22,7 +22,12 @@ let
         url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.915.31029_amd64.deb";
         hash = "sha256-kyglt2pB6AZDIEqaqcz9HLJHH/v8vh0xSZQ2D8qv+zU=";
       };
-    }));
+    }))).overrideAttrs (previous: {
+      # Render natively on Wayland to avoid blurry fractional XWayland scaling.
+      postFixup = (previous.postFixup or "") + ''
+        wrapProgram "$out/bin/chatgpt" --add-flags "--ozone-platform=wayland"
+      '';
+    });
 
   llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan "10488" (
     d: d.overrideAttrs (previous: {
