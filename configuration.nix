@@ -146,7 +146,7 @@ in
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome"
     ];
 
     permittedInsecurePackages = [
@@ -198,6 +198,7 @@ in
     vscode
     android-studio
     firefox
+    google-chrome
     htop
     (gnucash.overrideAttrs (prev: {
       preFixup = prev.preFixup + ''gappsWrapperArgs+=(--set LANGUAGE de_DE.UTF-8)'';
