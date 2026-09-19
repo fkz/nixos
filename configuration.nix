@@ -297,6 +297,7 @@ in
     cmake
     ghostty
     zed-editor
+    texlab
     lldb
     jetbrains.idea
     zls
