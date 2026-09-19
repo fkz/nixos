@@ -7,6 +7,32 @@
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
+  nixos-update = pkgs.writeShellApplication {
+    name = "nixos-update";
+    runtimeInputs = [ pkgs.git pkgs.nixos-rebuild ];
+    text = ''
+      if (( EUID != 0 )); then
+        echo "nixos-update must be run as root (use: sudo nixos-update)" >&2
+        exit 1
+      fi
+
+      config_dir=/etc/nixos
+
+      if [[ ! -d "$config_dir/.git" ]]; then
+        echo "$config_dir is not a Git checkout" >&2
+        exit 1
+      fi
+
+      if [[ -n "$(git -C "$config_dir" status --porcelain)" ]]; then
+        echo "$config_dir has uncommitted changes; refusing to update" >&2
+        exit 1
+      fi
+
+      git -C "$config_dir" pull --ff-only
+      exec nixos-rebuild switch --flake "$config_dir#nixos"
+    '';
+  };
+
   overrideVersionWhenLower = drv: version: fn:
     if builtins.compareVersions version drv.version == 1 then
       fn drv
@@ -265,6 +291,7 @@ in
     chatgpt
     gh
     nixd
+    nixos-update
     libreoffice
     scribus
     cmake
