@@ -266,6 +266,7 @@ in
     gh
     nixd
     libreoffice
+    scribus
     cmake
     ghostty
     zed-editor
