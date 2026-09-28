@@ -55,14 +55,7 @@ let
       '';
     });
 
-  llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan "10488" (
-    d: d.overrideAttrs (previous: {
-      version = "10488";
-      src = previous.src.override {
-        hash = "sha256-ZH5BEjkT+dn8NuZPOLFsXraT64GkguHCWMCsHdJANog=";
-      };
-    })
-  );
+  llama-cpp-vulkan = unstablePkgs.llama-cpp-vulkan;
 in
 
 {
