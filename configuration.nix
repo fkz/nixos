@@ -41,14 +41,23 @@ let
 
   chatgpt = (overrideVersionWhenLower
     (pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { })
-    "26.915.31029"
+    "26.924.50649"
     (d: d.overrideAttrs (_: {
-      version = "26.915.31029";
+      version = "26.924.50649";
       src = pkgs.fetchurl {
-        url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.915.31029_amd64.deb";
-        hash = "sha256-kyglt2pB6AZDIEqaqcz9HLJHH/v8vh0xSZQ2D8qv+zU=";
+        url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.924.50649_amd64.deb";
+        hash = "sha256-oPy4RcWhx6Gu5RNyh8c6Qxw6UcROzeabf6gzbcgiiGs=";
       };
     }))).overrideAttrs (previous: {
+      # New releases may omit the bundled LaTeX plugin.
+      installPhase = lib.replaceStrings
+        [ ''ln -sf ${lib.getExe pkgs.tectonic-unwrapped} "$out/lib/chatgpt/resources/plugins/openai-bundled/plugins/latex/bin/tectonic"'' ]
+        [ ''
+          if [ -d "$out/lib/chatgpt/resources/plugins/openai-bundled/plugins/latex/bin" ]; then
+            ln -sf ${lib.getExe pkgs.tectonic-unwrapped} "$out/lib/chatgpt/resources/plugins/openai-bundled/plugins/latex/bin/tectonic"
+          fi
+        '' ]
+        previous.installPhase;
       # Render natively on Wayland to avoid blurry fractional XWayland scaling.
       postFixup = (previous.postFixup or "") + ''
         wrapProgram "$out/bin/chatgpt" --add-flags "--ozone-platform=wayland"
