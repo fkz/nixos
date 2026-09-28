@@ -287,6 +287,7 @@ in
     nixos-update
     libreoffice
     scribus
+    lilypond
     cmake
     ghostty
     zed-editor
