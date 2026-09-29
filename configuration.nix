@@ -233,6 +233,9 @@ in
     firefox
     google-chrome
     htop
+    perf
+    hotspot
+    python3
     (gnucash.overrideAttrs (prev: {
       preFixup = prev.preFixup + ''gappsWrapperArgs+=(--set LANGUAGE de_DE.UTF-8)'';
     }))
