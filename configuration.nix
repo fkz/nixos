@@ -179,7 +179,7 @@ in
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome" "zoom"
     ];
 
     permittedInsecurePackages = [
@@ -240,6 +240,7 @@ in
       preFixup = prev.preFixup + ''gappsWrapperArgs+=(--set LANGUAGE de_DE.UTF-8)'';
     }))
     telegram-desktop
+    zoom-us
     ncdu
     code-cursor
     glab
