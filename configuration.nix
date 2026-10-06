@@ -64,7 +64,32 @@ let
       '';
     });
 
-  llama-cpp-vulkan = unstablePkgs.llama-cpp-vulkan;
+  llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
+    "0.6.1"
+    (d: d.overrideAttrs (previous: {
+      # EmbeddingGemma 2 support landed after the 0.6.0 release (PR #30054).
+      version = "0.6.1-pre-4fbc76d";
+      src = pkgs.fetchFromGitHub {
+        owner = "ggml-org";
+        repo = "llama.cpp";
+        rev = "4fbc76dec51d0add466f0210855c0596589b60d4";
+        hash = "sha256-fvPaf+gd44J06w1jay+jyOjmIPrSLDoGx5PZUJVIIUs=";
+      };
+      npmDepsHash = "sha256-a17M+L3nLdRnN6WMB6imPFmwqG2g8uv+gwN0XTAUrf8=";
+      preConfigure = lib.replaceStrings
+        [ "LLAMA_BUILD_NUMBER=11146" ]
+        [ "LLAMA_BUILD_NUMBER=1" ]
+        previous.preConfigure;
+      cmakeFlags = builtins.filter
+        (flag: !(lib.hasPrefix "-DLLAMA_BUILD_NUMBER=" flag
+          || lib.hasPrefix "-DLLAMA_BUILD_COMMIT=" flag
+          || lib.hasPrefix "-DLLAMA_BUILD_IS_DEV=" flag))
+        previous.cmakeFlags ++ [
+          "-DLLAMA_BUILD_NUMBER=1"
+          "-DLLAMA_BUILD_COMMIT=4fbc76d"
+          "-DLLAMA_BUILD_IS_DEV=ON"
+        ];
+    }));
 in
 
 {
