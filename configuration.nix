@@ -319,6 +319,7 @@ in
     gnumake
     calibre
     unstablePkgs.codex
+    unstablePkgs.t3code
     chatgpt
     gh
     nixd
