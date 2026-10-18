@@ -65,17 +65,17 @@ let
     });
 
   llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
-    "0.6.1"
+    "0.7.0"
     (d: d.overrideAttrs (previous: {
-      # EmbeddingGemma 2 support landed after the 0.6.0 release (PR #30054).
-      version = "0.6.1-pre-4fbc76d";
+      # Use the stable release until nixpkgs catches up.
+      version = "0.7.0";
       src = pkgs.fetchFromGitHub {
         owner = "ggml-org";
         repo = "llama.cpp";
-        rev = "4fbc76dec51d0add466f0210855c0596589b60d4";
-        hash = "sha256-fvPaf+gd44J06w1jay+jyOjmIPrSLDoGx5PZUJVIIUs=";
+        tag = "v0.7.0";
+        hash = "sha256-pEDYgI3AMTU+cekvRX7NNt5wddznydQSNuerswvEpsA=";
       };
-      npmDepsHash = "sha256-a17M+L3nLdRnN6WMB6imPFmwqG2g8uv+gwN0XTAUrf8=";
+      npmDepsHash = "sha256-hqYzdp1FwPhYkBP278fQXgY9NCKB6Q3P6Gko7BfP0m0=";
       preConfigure = lib.replaceStrings
         [ "LLAMA_BUILD_NUMBER=11146" ]
         [ "LLAMA_BUILD_NUMBER=1" ]
@@ -86,8 +86,8 @@ let
           || lib.hasPrefix "-DLLAMA_BUILD_IS_DEV=" flag))
         previous.cmakeFlags ++ [
           "-DLLAMA_BUILD_NUMBER=1"
-          "-DLLAMA_BUILD_COMMIT=4fbc76d"
-          "-DLLAMA_BUILD_IS_DEV=ON"
+          "-DLLAMA_BUILD_COMMIT=620d222"
+          "-DLLAMA_BUILD_IS_DEV=OFF"
         ];
     }));
 in
