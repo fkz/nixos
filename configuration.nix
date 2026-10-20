@@ -121,7 +121,7 @@ in
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   boot.kernelParams = [
-    "amd_iommu=off"
+    # Keep IOMMU enabled: the AMD XDNA NPU driver requires it.
     "amdgpu.gttsize=91136"
   ];
 
