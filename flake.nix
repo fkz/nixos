@@ -18,6 +18,13 @@
   };
   outputs = inputs@{ self, nixpkgs, nixos-hardware, ... }: {
     # NOTE: 'nixos' is the default hostname
+    packages.x86_64-linux = let
+      npu = import ./npu { pkgs = nixpkgs.legacyPackages.x86_64-linux; };
+    in {
+      npu-runtime = npu.runtime;
+      npu-tools = npu.tools;
+    };
+
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       specialArgs = { inherit inputs; };
       modules = [ ./configuration.nix nixos-hardware.nixosModules.framework-amd-ai-300-series ];

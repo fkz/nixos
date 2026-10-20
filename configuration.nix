@@ -6,6 +6,7 @@
 
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  npu = import ./npu { inherit pkgs; };
 
   nixos-update = pkgs.writeShellApplication {
     name = "nixos-update";
@@ -247,6 +248,8 @@ in
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
+    npu.runtime
+    npu.tools
     amp-cli
     vim
     # jetbrains.clion
