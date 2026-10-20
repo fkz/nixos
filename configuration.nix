@@ -65,7 +65,8 @@ let
       '';
     });
 
-  llama-cpp-vulkan = overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
+  llamaNpu = import ./npu/llama-prefill { inherit pkgs npu; };
+  llama-cpp-vulkan = llamaNpu.patch (overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
     "0.7.0"
     (d: d.overrideAttrs (previous: {
       # Use the stable release until nixpkgs catches up.
@@ -90,7 +91,8 @@ let
           "-DLLAMA_BUILD_COMMIT=620d222"
           "-DLLAMA_BUILD_IS_DEV=OFF"
         ];
-    }));
+    })));
+  llama-npu = llamaNpu.launcher llama-cpp-vulkan;
 in
 
 {
@@ -344,6 +346,7 @@ in
     element-desktop
     discord
     llama-cpp-vulkan
+    llama-npu
     ntfs3g
     spotify
     claude-code

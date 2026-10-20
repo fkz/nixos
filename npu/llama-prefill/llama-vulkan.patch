@@ -1,0 +1,25 @@
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -14268 +14268 @@
+-static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cgraph * cgraph) {
++static ggml_status ggml_backend_vk_graph_compute_impl(ggml_backend_t backend, ggml_cgraph * cgraph) {
+@@ -14771,0 +14772,8 @@
++#ifdef GGML_VULKAN_NPU_PREFILL
++#include "ggml-npu-prefill.inc"
++#else
++static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cgraph * graph) {
++    return ggml_backend_vk_graph_compute_impl(backend, graph);
++}
++#endif
++
+--- a/ggml/src/ggml-vulkan/CMakeLists.txt
++++ b/ggml/src/ggml-vulkan/CMakeLists.txt
+@@ -264,0 +265,8 @@
++
++option(GGML_VULKAN_NPU_PREFILL "Enable opt-in AMD XDNA2 expert prefill bridge" OFF)
++if (GGML_VULKAN_NPU_PREFILL)
++    find_package(OpenMP REQUIRED)
++    target_compile_definitions(ggml-vulkan PRIVATE GGML_VULKAN_NPU_PREFILL)
++    target_include_directories(ggml-vulkan PRIVATE ${GGML_NPU_XRT_INCLUDE})
++    target_link_libraries(ggml-vulkan PRIVATE ${GGML_NPU_XRT_LIBRARY} OpenMP::OpenMP_CXX)
++endif()
