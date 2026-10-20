@@ -128,6 +128,12 @@ in
     "amdgpu.gttsize=91136"
   ];
 
+  # Alternate boot entry for comparing GPU performance without IOMMU.
+  # The AMD XDNA NPU is unavailable in this specialisation.
+  specialisation.iommu-off.configuration = {
+    boot.kernelParams = [ "amd_iommu=off" ];
+  };
+
   boot.extraModprobeConfig = ''
     options ttm pages_limit=32505856
     options ttm page_pool_size=32505856
