@@ -1,0 +1,40 @@
+From 520c6b28b6af2b9cc0eece257a2a81cf33911019 Mon Sep 17 00:00:00 2001
+From: Daniel Han <danielhanchen@gmail.com>
+Date: Wed, 21 Oct 2026 02:14:13 -0700
+Subject: [PATCH] qwen4exp : give drafters the mean of the hyper-connection
+ streams as layer input
+
+DFlash and EAGLE3 read one n_embd row per token from the target's layer
+inputs. qwen4exp handed them the whole [n_embd, hc, T] residual, so
+extract_layer_inputs saw hc*n_embd floats per row and aborted on
+GGML_ASSERT(row_floats == model.hparams.n_embd) on the first prompt.
+
+Build the mean over the hc streams only for the layers a drafter asked
+for, as deepseek4 already does. The graph is unchanged when no layer
+input is requested.
+---
+ src/models/qwen4exp.cpp | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/src/models/qwen4exp.cpp b/src/models/qwen4exp.cpp
+index 77430e7afdc4..e256f6aad403 100644
+--- a/src/models/qwen4exp.cpp
++++ b/src/models/qwen4exp.cpp
+@@ -447,7 +447,16 @@ llama_model_qwen4exp::graph::graph(const llama_model & model, const llm_graph_pa
+     ggml_build_forward_expand(gf, res_hc);
+ 
+     for (int il = 0; il < n_layer; ++il) {
+-        res->t_layer_inp[il] = res_hc;
++        // drafters (DFlash, EAGLE3) read one n_embd row per token: the mean of the hc streams, as in deepseek4
++        if ((size_t) il < cparams.embeddings_layer_inp.size() && cparams.embeddings_layer_inp[il]) {
++            ggml_tensor * mean = ggml_view_2d(ctx0, res_hc, n_embd, res_hc->ne[2], res_hc->nb[2], 0);
++            for (int64_t s = 1; s < hc; ++s) {
++                mean = ggml_add(ctx0, mean, ggml_view_2d(ctx0, res_hc, n_embd, res_hc->ne[2], res_hc->nb[2], s*res_hc->nb[1]));
++            }
++            res->t_layer_inp[il] = ggml_scale(ctx0, mean, 1.0f/hc);
++            cb(res->t_layer_inp[il], "layer_inp", il);
++            ggml_build_forward_expand(gf, res->t_layer_inp[il]);
++        }
+ 
+         if (hparams.is_ple(il)) {
+             res_hc = build_ple(inp->get_recr(), ple_emb, res_hc, il);

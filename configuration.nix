@@ -66,7 +66,7 @@ let
     });
 
   llamaNpu = import ./npu/llama-prefill { inherit pkgs npu; };
-  llama-cpp-vulkan = llamaNpu.patch (overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
+  llama-cpp-vulkan = (llamaNpu.patch (overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
     "0.7.0"
     (d: d.overrideAttrs (previous: {
       # Use the stable release until nixpkgs catches up.
@@ -91,7 +91,11 @@ let
           "-DLLAMA_BUILD_COMMIT=620d222"
           "-DLLAMA_BUILD_IS_DEV=OFF"
         ];
-    })));
+    })))).overrideAttrs (previous: {
+    # Average Flash-Next hyper-connection streams for DFlash2/EAGLE3.
+    # https://github.com/unslothai/llama.cpp/pull/307
+    patches = (previous.patches or []) ++ [ ./patches/llama-qwen4exp-dflash-layer-input.patch ];
+  });
   llama-npu = llamaNpu.launcher llama-cpp-vulkan;
 in
 
