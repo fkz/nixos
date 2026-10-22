@@ -1,0 +1,61 @@
+--- a/ggml/src/ggml-cuda/mmvf.cu
++++ b/ggml/src/ggml-cuda/mmvf.cu
+@@ -414,6 +414,33 @@
+         sample_ratio, stride_sample_x, stride_sample_y, stride_sample_dst, ids_stride);
+ 
+ }
++
++#if defined(GGML_USE_HIP)
++// HC down and router projections: independent rows share a block, and
++// two float accumulators shorten each lane's dot-product dependency chain.
++template<int Cols>
++static __global__ void hip_dense_bf16(const uint32_t * x, const float2 * y, float * dst) {
++    const int lane = threadIdx.x & 31;
++    const int row = blockIdx.x * 2 + threadIdx.x / 32;
++    float sum0 = 0.0f, sum1 = 0.0f;
++#pragma unroll 4
++    for (int j = 0; j < Cols / 64; ++j) {
++        const int col = lane + j * 32;
++        const uint32_t w = x[row * (Cols / 2) + col];
++        const float2 v = y[col];
++        sum0 = fmaf(__uint_as_float(w << 16), v.x, sum0);
++        sum1 = fmaf(__uint_as_float(w & 0xffff0000u), v.y, sum1);
++    }
++    float sum = sum0 + sum1;
++#pragma unroll
++    for (int offset = 16; offset > 0; offset /= 2) {
++        sum += __shfl_down(sum, offset, 32);
++    }
++    if (lane == 0) {
++        dst[row] = sum;
++    }
++}
++#endif
+ 
+ #if defined(GGML_USE_HIP)
+ // Flash-Next HC up projection: a wave32 reduces one short row, with two
+@@ -464,6 +491,24 @@
+ #if defined(GGML_USE_HIP)
+     if constexpr (std::is_same_v<T, nv_bfloat16> && std::is_same_v<type_acc, float> &&
+                   ncols_dst == 1 && !is_multi_token_id) {
++        static const bool dense_disabled = getenv("GGML_HIP_DISABLE_DENSE_BF16") != nullptr;
++        if (!dense_disabled && !ids && !fusion.gate && !fusion.x_bias && !fusion.gate_bias &&
++            warp_size == 32 && GGML_CUDA_CC_IS_RDNA3_5(ggml_cuda_info().devices[device].cc) &&
++            stride_row == ncols && nchannels_x == 1 && nchannels_y == 1 && nchannels_dst == 1 &&
++            nsamples_x == 1 && nsamples_dst == 1 && nsamples_or_ntokens == 1) {
++            if (ncols == 10240 && nrows == 320) {
++                const ggml_cuda_kernel_launch_params params = {dim3(160), dim3(64), 0, stream};
++                ggml_cuda_kernel_launch(hip_dense_bf16<10240>, params,
++                    reinterpret_cast<const uint32_t *>(x), reinterpret_cast<const float2 *>(y), dst);
++                return;
++            }
++            if (ncols == 2560 && nrows == 512) {
++                const ggml_cuda_kernel_launch_params params = {dim3(256), dim3(64), 0, stream};
++                ggml_cuda_kernel_launch(hip_dense_bf16<2560>, params,
++                    reinterpret_cast<const uint32_t *>(x), reinterpret_cast<const float2 *>(y), dst);
++                return;
++            }
++        }
+         static const bool disabled = getenv("GGML_HIP_DISABLE_HC_UP") != nullptr;
+         const bool has_fusion = fusion.gate || fusion.x_bias || fusion.gate_bias;
+         if (!disabled && !ids && !has_fusion && warp_size == 32 &&

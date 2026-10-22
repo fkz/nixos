@@ -107,6 +107,7 @@ let
     patches = (previous.patches or []) ++ [
       ./patches/llama-qwen4exp-dflash-layer-input.patch
       ./patches/llama-hip-hc-up.patch
+      ./patches/llama-hip-dense-bf16.patch
     ];
   });
   llama-hip = pkgs.runCommand "llama-hip" {

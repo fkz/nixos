@@ -16,7 +16,8 @@ int main(int argc, char ** argv) {
     std::mt19937 rng(1234);
     std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
     // Fast path, nearby fallback shapes, and multi-token fallback.
-    for (auto shape : {std::pair<int,int>{320,10240}, {320,10238}, {322,10240}, {10240,320}}) {
+    for (auto shape : {std::pair<int,int>{320,10240}, {320,10238}, {322,10240},
+                       {10240,320}, {2560,512}, {2560,510}, {2562,512}}) {
         for (int tokens : {1,2}) {
             int cols = shape.first, rows = shape.second;
             auto ctx = ggml_init({16*1024*1024, nullptr, true});
