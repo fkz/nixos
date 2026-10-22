@@ -104,7 +104,10 @@ let
     # ROCm 7.2 ships RDNA 3.5 BLAS kernels for gfx1150, but not gfx1152.
     rocmGpuTargets = [ "gfx1150" ];
   })).overrideAttrs (previous: {
-    patches = (previous.patches or []) ++ [ ./patches/llama-qwen4exp-dflash-layer-input.patch ];
+    patches = (previous.patches or []) ++ [
+      ./patches/llama-qwen4exp-dflash-layer-input.patch
+      ./patches/llama-hip-hc-up.patch
+    ];
   });
   llama-hip = pkgs.runCommand "llama-hip" {
     nativeBuildInputs = [ pkgs.makeWrapper ];

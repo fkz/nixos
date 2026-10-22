@@ -1,0 +1,59 @@
+--- a/ggml/src/ggml-cuda/mmvf.cu
++++ b/ggml/src/ggml-cuda/mmvf.cu
+@@ -414,6 +414,31 @@
+         sample_ratio, stride_sample_x, stride_sample_y, stride_sample_dst, ids_stride);
+ 
+ }
++
++#if defined(GGML_USE_HIP)
++// Flash-Next HC up projection: a wave32 reduces one short row, with two
++// independent rows per block. Avoid shared-memory reductions across five waves.
++static __global__ void hip_hc_up_bf16(const uint32_t * x, const float2 * y, float * dst) {
++    const int lane = threadIdx.x & 31;
++    const int row = blockIdx.x * 2 + threadIdx.x / 32;
++    float sum = 0.0f;
++#pragma unroll
++    for (int j = 0; j < 5; ++j) {
++        const int col = lane + j * 32;
++        const uint32_t w = x[row * 160 + col];
++        const float2 v = y[col];
++        sum = fmaf(__uint_as_float(w << 16), v.x, sum);
++        sum = fmaf(__uint_as_float(w & 0xffff0000u), v.y, sum);
++    }
++#pragma unroll
++    for (int offset = 16; offset > 0; offset /= 2) {
++        sum += __shfl_down(sum, offset, 32);
++    }
++    if (lane == 0) {
++        dst[row] = sum;
++    }
++}
++#endif
+ 
+ template <typename T, typename type_acc, int ncols_dst, bool is_multi_token_id = false>
+ void launch_mul_mat_vec_f_cuda(
+@@ -435,6 +460,24 @@
+ 
+     const int device = ggml_cuda_get_device();
+     const int warp_size = ggml_cuda_info().devices[device].warp_size;
++
++#if defined(GGML_USE_HIP)
++    if constexpr (std::is_same_v<T, nv_bfloat16> && std::is_same_v<type_acc, float> &&
++                  ncols_dst == 1 && !is_multi_token_id) {
++        static const bool disabled = getenv("GGML_HIP_DISABLE_HC_UP") != nullptr;
++        const bool has_fusion = fusion.gate || fusion.x_bias || fusion.gate_bias;
++        if (!disabled && !ids && !has_fusion && warp_size == 32 &&
++            GGML_CUDA_CC_IS_RDNA3_5(ggml_cuda_info().devices[device].cc) &&
++            ncols == 320 && nrows == 10240 && stride_row == 320 &&
++            nchannels_x == 1 && nchannels_y == 1 && nchannels_dst == 1 &&
++            nsamples_x == 1 && nsamples_dst == 1 && nsamples_or_ntokens == 1) {
++            const ggml_cuda_kernel_launch_params params = {dim3(5120), dim3(64), 0, stream};
++            ggml_cuda_kernel_launch(hip_hc_up_bf16, params,
++                reinterpret_cast<const uint32_t *>(x), reinterpret_cast<const float2 *>(y), dst);
++            return;
++        }
++    }
++#endif
+ 
+     int64_t block_size_best = warp_size;
+     int64_t niter_best      = (ncols + 2*warp_size - 1) / (2*warp_size);
