@@ -23,6 +23,8 @@
     in {
       npu-runtime = npu.runtime;
       npu-tools = npu.tools;
+      llama-hip = (builtins.head (builtins.filter (p: p.name == "llama-hip") self.nixosConfigurations.nixos.config.environment.systemPackages));
+      llama-cpp-hip = self.packages.x86_64-linux.llama-hip.package;
       llama-npu = builtins.head (builtins.filter (p: p.name == "llama-npu") self.nixosConfigurations.nixos.config.environment.systemPackages);
       llama-npu-kernels = (import ./npu/llama-prefill { pkgs = nixpkgs.legacyPackages.x86_64-linux; inherit npu; }).kernels;
     };

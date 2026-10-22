@@ -66,7 +66,7 @@ let
     });
 
   llamaNpu = import ./npu/llama-prefill { inherit pkgs npu; };
-  llama-cpp-vulkan = (llamaNpu.patch (overrideVersionWhenLower unstablePkgs.llama-cpp-vulkan
+  llamaBase = package: overrideVersionWhenLower package
     "0.7.0"
     (d: d.overrideAttrs (previous: {
       # Use the stable release until nixpkgs catches up.
@@ -91,11 +91,31 @@ let
           "-DLLAMA_BUILD_COMMIT=620d222"
           "-DLLAMA_BUILD_IS_DEV=OFF"
         ];
-    })))).overrideAttrs (previous: {
+    }));
+  llama-cpp-vulkan = (llamaNpu.patch (llamaBase unstablePkgs.llama-cpp-vulkan)).overrideAttrs (previous: {
     # Average Flash-Next hyper-connection streams for DFlash2/EAGLE3.
     # https://github.com/unslothai/llama.cpp/pull/307
     patches = (previous.patches or []) ++ [ ./patches/llama-qwen4exp-dflash-layer-input.patch ];
   });
+  # Keep HIP separate so backend comparisons use explicit command names.
+  llama-cpp-hip = (llamaBase (unstablePkgs.llama-cpp.override {
+    rocmSupport = true;
+    vulkanSupport = false;
+    # ROCm 7.2 ships RDNA 3.5 BLAS kernels for gfx1150, but not gfx1152.
+    rocmGpuTargets = [ "gfx1150" ];
+  })).overrideAttrs (previous: {
+    patches = (previous.patches or []) ++ [ ./patches/llama-qwen4exp-dflash-layer-input.patch ];
+  });
+  llama-hip = pkgs.runCommand "llama-hip" {
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    passthru.package = llama-cpp-hip;
+  } ''
+    mkdir -p $out/bin
+    for command in llama llama-cli llama-server llama-bench; do
+      makeWrapper ${llama-cpp-hip}/bin/$command $out/bin/$command-hip \
+        --set-default HSA_OVERRIDE_GFX_VERSION 11.5.0
+    done
+  '';
   llama-npu = llamaNpu.launcher llama-cpp-vulkan;
 in
 
@@ -356,6 +376,7 @@ in
     element-desktop
     discord
     llama-cpp-vulkan
+    llama-hip
     llama-npu
     ntfs3g
     spotify
