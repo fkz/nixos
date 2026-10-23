@@ -240,6 +240,8 @@ in
     '';
   };
 
+  virtualisation.podman.enable = true;
+
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
       "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome" "zoom"
