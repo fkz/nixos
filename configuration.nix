@@ -108,6 +108,7 @@ let
       ./patches/llama-qwen4exp-dflash-layer-input.patch
       ./patches/llama-hip-hc-up.patch
       ./patches/llama-hip-dense-bf16.patch
+      ./patches/llama-hip-q6-pair.patch
     ];
   });
   llama-hip = pkgs.runCommand "llama-hip" {

@@ -1,4 +1,4 @@
-# llama.cpp HIP projection optimizations
+# llama.cpp HIP decode optimizations
 
 The HIP build includes a narrow fast path for Flash-Next's BF16 HC up
 projection: contiguous `[320, 10240]` weights, one input token, no expert IDs,
@@ -56,7 +56,7 @@ This comparison uses the actual built package, without temporary kernel modules.
 
 An earlier exploratory on/off comparison at context depths 0 and 2048 suggested gains of 5.5–6.5%. Later sustained verification became highly variable as the GPU sensor reached 97–98°C and the active clock dropped below its maximum; enabled samples ranged from about 3.6 to 6.1 tokens/s. Those unstable long runs do **not** establish a sustained improvement or a reliable HIP-versus-Vulkan ranking. The cooled short-run comparison above is the qualified result. Absolute speeds across this section and the initial optimization section should not be compared directly.
 
-Q6_K experiments with two waves per row and with independently packed rows
+Earlier Q6_K experiments with two waves per row and with independently packed rows
 were also tested but did not show a useful isolated improvement. They are not
 included in the package. The added BF16 kernels use the original BF16 weights
 and float accumulation; they do not change the model quantization.
@@ -73,7 +73,7 @@ nix shell /home/fabian/nixos#llama-hip -c llama-server-hip \
 
 Set `GGML_HIP_DISABLE_HC_UP=1` before starting a HIP command to use the original
 HC up kernel. Set `GGML_HIP_DISABLE_DENSE_BF16=1` to disable the added HC down
-and router paths. Set both to disable all custom projection kernels.
+and router paths. Set both to disable the custom BF16 projection kernels.
 These switches are read once per process. Do not confuse it with
 `GGML_CUDA_DISABLE_GRAPHS`, which disables graph execution instead.
 For system-wide installation, commit/push first and run `sudo nixos-update`.
@@ -102,4 +102,76 @@ nix develop .#llama-cpp-hip -c c++ -O2 \
   -lggml -lggml-base -o /tmp/check-hip-hc-up
 HSA_OVERRIDE_GFX_VERSION=11.5.0 /tmp/check-hip-hc-up \
   "$task_out/bin/libggml-hip.so" ROCm0
+```
+
+## Q6_K follow-up (2026-10-23)
+
+The Q6_K fast path keeps the original Q6_K weights, Q8_1 activation quantization,
+and float accumulation. Each lane evaluates two Q6_K contributions with
+independent accumulators; one wave owns an output row. Blocks contain two
+independent rows, or eight for small output matrices. It avoids the generic
+multi-shape kernel's indexing and fusion machinery for this narrow case.
+
+The guard requires RDNA 3.5 / wave32, a single token/channel/sample, no expert
+IDs, fusion or shared-expert operation, contiguous weight rows, and input
+width 2560 or 6144. Other widths, multi-token batches and other weight types
+use the original path. There is no model/state memory-layout change.
+`GGML_HIP_DISABLE_Q6_PAIR=1` disables only this optimization, once per process.
+
+A temporary backend overlay was compared with the same overlay disabled, in
+cooled ABBA order. The existing BF16 optimizations stayed enabled. Settings:
+64 decode tokens, two repetitions at each depth, full GPU offload, lazy mode
+on, F16 KV, flash attention auto, six CPU threads, no draft model. Means of
+four throughput samples per condition:
+
+| Context depth | Q6 path disabled tokens/s | Enabled tokens/s | Gain |
+|---:|---:|---:|---:|
+| 0 | 7.372 | 7.584 | 2.9% |
+| 2048 | 6.931 | 7.199 | 3.9% |
+
+Run means (depth 0 / depth 2048): off 7.327 / 6.984, on 7.622 / 7.188,
+on 7.546 / 7.209, off 7.418 / 6.877. Starting GPU sensor readings were
+64–66°C; peaks were 86–97°C. The last depth-2048 control samples still had
+noticeable spread (6.672–7.083). These are short benchmark results, not a
+promise of the same sustained or server throughput. Earlier full-model runs
+with a competing GPU workload were discarded after the user paused it.
+
+Isolated synchronous backend tests suggested roughly 14–18% lower time on
+the larger Q6_K products. Those exploratory tests preceded pausing the other
+GPU workload and are less controlled than the full-model comparison above.
+The full-model gain is smaller because Q6_K is only one part of decode.
+The earlier profile measured about 18 ms/token for HIP Q6_K, versus 12.6 ms
+for Vulkan, with differing profiler overhead. The 71 Q6_K products represent
+about 864 MB of weight bytes/token; bytes divided by kernel time includes
+unpacking and arithmetic, and is not a direct RAM-bandwidth measurement.
+
+### Q6 numerical regression check
+
+`tests/llama-hip-q6.cpp` writes all outputs for 40 cases: all six model shapes,
+odd/small output row counts, an unsupported input width, one/two tokens,
+and Q5_K controls. Compare separate processes with the Q6 optimization
+on/off using `tests/check-llama-hip-q6.py`. The test requires finite outputs,
+scaled error below `1e-4` on optimized cases, and exact equality on fallback
+cases. It compares against the previous HIP path; it is not a downstream
+model-quality benchmark. The exploratory module passed all 205,068 outputs,
+with maximum absolute difference `1.53e-5` and scaled difference `8.67e-6`.
+The final Nix-built package passed the same 40-case comparison without any
+temporary preload module, with the same maximum differences. The complete
+model also loaded and generated 32 tokens successfully (6.949 tokens/s in a
+single post-build functional run). That unpaired run was not cooled or used
+to estimate the performance gain above. Both the package build and full
+NixOS toplevel derivation evaluation succeeded; no system activation was done.
+
+```sh
+task_src=$(nix eval --raw .#llama-cpp-hip.src.outPath)
+task_out=$(nix build .#llama-cpp-hip --no-link --print-out-paths)
+nix develop .#llama-cpp-hip -c c++ -O2 \
+  -I"$task_src/ggml/include" tests/llama-hip-q6.cpp \
+  -L"$task_out/lib" -Wl,-rpath,"$task_out/lib" \
+  -lggml -lggml-base -o /tmp/check-hip-q6
+GGML_HIP_DISABLE_Q6_PAIR=1 HSA_OVERRIDE_GFX_VERSION=11.5.0 \
+  /tmp/check-hip-q6 "$task_out/bin/libggml-hip.so" ROCm0 /tmp/q6-off.bin
+HSA_OVERRIDE_GFX_VERSION=11.5.0 \
+  /tmp/check-hip-q6 "$task_out/bin/libggml-hip.so" ROCm0 /tmp/q6-on.bin
+python3 tests/check-llama-hip-q6.py /tmp/q6-off.bin /tmp/q6-on.bin
 ```
