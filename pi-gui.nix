@@ -1,4 +1,4 @@
-# Build the pi-gui desktop application from its pinned upstream source.
+# Build the pi-gui desktop application from the pinned thinking/timing fork.
 # Instantiate with:
 #   nix-build --expr 'let pkgs = import <nixpkgs> {}; in pkgs.callPackage ./pi-gui.nix {}'
 {
@@ -23,10 +23,10 @@ let
   pnpm = pnpm_10;
 
   src = fetchFromGitHub {
-    owner = "minghinmatthewlam";
+    owner = "fkz";
     repo = "pi-gui";
-    rev = "v${version}";
-    hash = "sha256-SKdA+lAkaSRvdNugGXtr+iAYELZTWjDcZMhZzmKki6c=";
+    rev = "95a79a9cdcde589683794af141a0fc8373676581";
+    hash = "sha256-RedFsM0MJUIdlMI/R7zh1OVCfS+5vLr9u0wDlDv8HK8=";
   };
 
   desktopItem = makeDesktopItem {
@@ -52,7 +52,7 @@ stdenv.mkDerivation (finalAttrs: {
       "@pi-gui/extension-ui"
       "@pi-gui/catalogs"
     ];
-    hash = "sha256-HBpwxonBC6F70QphyZhlH6mubi7bSApGV8SqHXDvDBQ=";
+    hash = "sha256-TdT7i0kyvwcNKgTsn4pADHNY2TE7PnrnOsgyr3BvtHc=";
   };
 
   nativeBuildInputs = [
@@ -86,7 +86,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = {
     description = "Desktop app for the pi coding agent, built from source";
-    homepage = "https://github.com/minghinmatthewlam/pi-gui";
+    homepage = "https://github.com/fkz/pi-gui";
     license = lib.licenses.mit;
     platforms = [ "x86_64-linux" ];
     mainProgram = pname;
