@@ -25,8 +25,8 @@ let
   src = fetchFromGitHub {
     owner = "fkz";
     repo = "pi-gui";
-    rev = "95a79a9cdcde589683794af141a0fc8373676581";
-    hash = "sha256-RedFsM0MJUIdlMI/R7zh1OVCfS+5vLr9u0wDlDv8HK8=";
+    rev = "ba95d47ee6fb03dcbb7c68c0ff4c1218db2a114f";
+    hash = "sha256-i+lqjSPYy9jTF41AX68XQdSx3LeY4zOAkpm//iv8jTA=";
   };
 
   desktopItem = makeDesktopItem {
@@ -52,7 +52,7 @@ stdenv.mkDerivation (finalAttrs: {
       "@pi-gui/extension-ui"
       "@pi-gui/catalogs"
     ];
-    hash = "sha256-TdT7i0kyvwcNKgTsn4pADHNY2TE7PnrnOsgyr3BvtHc=";
+    hash = "sha256-dq44ObnohNkir52lnjyWjKBSYLz/WGWDoL3c9prkqtU=";
   };
 
   nativeBuildInputs = [
