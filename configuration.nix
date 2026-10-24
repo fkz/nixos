@@ -363,6 +363,7 @@ in
     unstablePkgs.codex
     unstablePkgs.t3code
     chatgpt
+    (pkgs.callPackage ./pi-gui.nix { })
     gh
     nixd
     nixos-update

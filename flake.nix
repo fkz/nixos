@@ -21,6 +21,7 @@
     packages.x86_64-linux = let
       npu = import ./npu { pkgs = nixpkgs.legacyPackages.x86_64-linux; };
     in {
+      pi-gui = nixpkgs.legacyPackages.x86_64-linux.callPackage ./pi-gui.nix { };
       npu-runtime = npu.runtime;
       npu-tools = npu.tools;
       llama-hip = (builtins.head (builtins.filter (p: p.name == "llama-hip") self.nixosConfigurations.nixos.config.environment.systemPackages));
