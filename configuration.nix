@@ -42,12 +42,12 @@ let
 
   chatgpt = (overrideVersionWhenLower
     (pkgs.callPackage "${inputs.chatgpt-pr}/pkgs/by-name/ch/chatgpt/package.nix" { })
-    "26.1007.71326"
+    "26.1021.22027"
     (d: d.overrideAttrs (_: {
-      version = "26.1007.71326";
+      version = "26.1021.22027";
       src = pkgs.fetchurl {
-        url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.1007.71326_amd64.deb";
-        hash = "sha256-DgBrSTFxL1qQ1M0ElyxuC1M87c39srUZRtW5NnRx9VY=";
+        url = "https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_26.1021.22027_amd64.deb";
+        hash = "sha256-6wgxxzTxVPk/jrzw4X0RjaDep9wXN9xhoecURDdb8ZA=";
       };
     }))).overrideAttrs (previous: {
       # New releases may omit the bundled LaTeX plugin.
