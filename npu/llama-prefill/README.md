@@ -1,6 +1,6 @@
 # Experimental llama.cpp XDNA2 prefill bridge
 
-This patch adds an opt-in NPU path inside the Vulkan backend of llama.cpp 0.7.0.
+This patch adds an opt-in NPU path inside the Vulkan backend of llama.cpp 0.8.0.
 It supports native IQ3_XXS MoE expert gate/up matrices with K=2560 and N=640,
 including the matching tensors in ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF.
 Other formats, shapes, and small expert groups use Vulkan. Single-token decode

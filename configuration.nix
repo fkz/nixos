@@ -66,32 +66,29 @@ let
     });
 
   llamaNpu = import ./npu/llama-prefill { inherit pkgs npu; };
-  llamaBase = package: overrideVersionWhenLower package
-    "0.7.0"
-    (d: d.overrideAttrs (previous: {
-      # Use the stable release until nixpkgs catches up.
-      version = "0.7.0";
-      src = pkgs.fetchFromGitHub {
-        owner = "ggml-org";
-        repo = "llama.cpp";
-        tag = "v0.7.0";
-        hash = "sha256-pEDYgI3AMTU+cekvRX7NNt5wddznydQSNuerswvEpsA=";
-      };
-      npmDepsHash = "sha256-hqYzdp1FwPhYkBP278fQXgY9NCKB6Q3P6Gko7BfP0m0=";
-      preConfigure = lib.replaceStrings
-        [ "LLAMA_BUILD_NUMBER=11146" ]
-        [ "LLAMA_BUILD_NUMBER=1" ]
-        previous.preConfigure;
-      cmakeFlags = builtins.filter
-        (flag: !(lib.hasPrefix "-DLLAMA_BUILD_NUMBER=" flag
-          || lib.hasPrefix "-DLLAMA_BUILD_COMMIT=" flag
-          || lib.hasPrefix "-DLLAMA_BUILD_IS_DEV=" flag))
-        previous.cmakeFlags ++ [
-          "-DLLAMA_BUILD_NUMBER=1"
-          "-DLLAMA_BUILD_COMMIT=620d222"
-          "-DLLAMA_BUILD_IS_DEV=OFF"
-        ];
-    }));
+  llamaBase = package: package.overrideAttrs (previous: {
+    version = "0.8.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "ggml-org";
+      repo = "llama.cpp";
+      tag = "v0.8.0";
+      hash = "sha256-WQAtD8Hos6fEtgPQId7nZiLGyP4asAMKJYEXZid1nqc=";
+    };
+    npmDepsHash = "sha256-hqYzdp1FwPhYkBP278fQXgY9NCKB6Q3P6Gko7BfP0m0=";
+    preConfigure = lib.replaceStrings
+      [ "LLAMA_BUILD_NUMBER=11146" ]
+      [ "LLAMA_BUILD_NUMBER=1" ]
+      previous.preConfigure;
+    cmakeFlags = builtins.filter
+      (flag: !(lib.hasPrefix "-DLLAMA_BUILD_NUMBER=" flag
+        || lib.hasPrefix "-DLLAMA_BUILD_COMMIT=" flag
+        || lib.hasPrefix "-DLLAMA_BUILD_IS_DEV=" flag))
+      previous.cmakeFlags ++ [
+        "-DLLAMA_BUILD_NUMBER=1"
+        "-DLLAMA_BUILD_COMMIT=8642541"
+        "-DLLAMA_BUILD_IS_DEV=OFF"
+      ];
+  });
   llama-cpp-vulkan = (llamaNpu.patch (llamaBase unstablePkgs.llama-cpp-vulkan)).overrideAttrs (previous: {
     # Average Flash-Next hyper-connection streams for DFlash2/EAGLE3.
     # https://github.com/unslothai/llama.cpp/pull/307
