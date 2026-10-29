@@ -74,7 +74,7 @@ let
       tag = "v0.8.0";
       hash = "sha256-WQAtD8Hos6fEtgPQId7nZiLGyP4asAMKJYEXZid1nqc=";
     };
-    npmDepsHash = "sha256-hqYzdp1FwPhYkBP278fQXgY9NCKB6Q3P6Gko7BfP0m0=";
+    npmDepsHash = "sha256-XLtEZsSFdk+2SyfXzBp8HQ2e27PQPpDCn1YjePU1/9w=";
     preConfigure = lib.replaceStrings
       [ "LLAMA_BUILD_NUMBER=11146" ]
       [ "LLAMA_BUILD_NUMBER=1" ]
@@ -89,11 +89,7 @@ let
         "-DLLAMA_BUILD_IS_DEV=OFF"
       ];
   });
-  llama-cpp-vulkan = (llamaNpu.patch (llamaBase unstablePkgs.llama-cpp-vulkan)).overrideAttrs (previous: {
-    # Average Flash-Next hyper-connection streams for DFlash2/EAGLE3.
-    # https://github.com/unslothai/llama.cpp/pull/307
-    patches = (previous.patches or []) ++ [ ./patches/llama-qwen4exp-dflash-layer-input.patch ];
-  });
+  llama-cpp-vulkan = llamaNpu.patch (llamaBase unstablePkgs.llama-cpp-vulkan);
   # Keep HIP separate so backend comparisons use explicit command names.
   llama-cpp-hip = (llamaBase (unstablePkgs.llama-cpp.override {
     rocmSupport = true;
@@ -102,7 +98,6 @@ let
     rocmGpuTargets = [ "gfx1150" ];
   })).overrideAttrs (previous: {
     patches = (previous.patches or []) ++ [
-      ./patches/llama-qwen4exp-dflash-layer-input.patch
       ./patches/llama-hip-hc-up.patch
       ./patches/llama-hip-dense-bf16.patch
       ./patches/llama-hip-q6-pair.patch
