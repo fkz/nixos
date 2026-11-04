@@ -236,7 +236,7 @@ in
 
   nixpkgs.config = {
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome" "zoom"
+      "android-studio" "vscode" "discord" "clion" "spotify" "claude-code" "claude-desktop" "cursor" "amp-cli" "idea" "chatgpt" "google-chrome" "zoom"
     ];
 
     permittedInsecurePackages = [
@@ -381,6 +381,7 @@ in
     ntfs3g
     spotify
     claude-code
+    (pkgs.callPackage ./claude-desktop.nix { })
     inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.desktop
   ];
 
