@@ -21,6 +21,26 @@
     packages.x86_64-linux = let
       npu = import ./npu { pkgs = nixpkgs.legacyPackages.x86_64-linux; };
     in {
+      avalon = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux.callPackage ./avalon.nix { };
+      avalon-hip-unwrapped = self.packages.x86_64-linux.avalon.override {
+        rocmSupport = true;
+        # This machine is gfx1152; ROCm's BLAS kernels require gfx1150 compatibility.
+        rocmGpuTargets = [ "gfx1150" ];
+      };
+      avalon-hip = let
+        pkgs = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux;
+        package = self.packages.x86_64-linux.avalon-hip-unwrapped;
+      in pkgs.symlinkJoin {
+        name = "avalon-hip";
+        paths = [ package ];
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        postBuild = ''
+          for executable in "$out"/bin/avalon*; do
+            wrapProgram "$executable" --set-default HSA_OVERRIDE_GFX_VERSION 11.5.0
+          done
+        '';
+        inherit (package) meta;
+      };
       pi-gui = nixpkgs.legacyPackages.x86_64-linux.callPackage ./pi-gui.nix { };
       npu-runtime = npu.runtime;
       npu-tools = npu.tools;
