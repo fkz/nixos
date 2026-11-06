@@ -378,6 +378,7 @@ in
     llama-cpp-vulkan
     llama-hip
     llama-npu
+    inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.avalon-hip
     ntfs3g
     spotify
     claude-code

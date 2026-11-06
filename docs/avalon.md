@@ -22,5 +22,5 @@ environment. `avalon-hip-unwrapped` exposes the build without that launcher.
 Other GPUs can use `avalon.override { rocmSupport = true;
 rocmGpuTargets = [ "gfx1100" ]; }` with the appropriate target.
 
-The package is exposed through the flake and is not added to the system package
-list automatically.
+The HIP package is included in the system package list, making `avalon-server`,
+`avalon-cli`, and the other prefixed commands available after activation.
