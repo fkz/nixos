@@ -155,6 +155,11 @@ in
     boot.kernelParams = [ "amd_iommu=off" ];
   };
 
+  # Compare desktop startup with amdgpu loaded after the initrd.
+  specialisation.late-amdgpu.configuration = {
+    hardware.amdgpu.initrd.enable = lib.mkForce false;
+  };
+
   boot.extraModprobeConfig = ''
     options ttm pages_limit=32505856
     options ttm page_pool_size=32505856
