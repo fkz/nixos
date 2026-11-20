@@ -75,10 +75,11 @@ let
       hash = "sha256-WQAtD8Hos6fEtgPQId7nZiLGyP4asAMKJYEXZid1nqc=";
     };
     npmDepsHash = "sha256-XLtEZsSFdk+2SyfXzBp8HQ2e27PQPpDCn1YjePU1/9w=";
-    preConfigure = lib.replaceStrings
-      [ "LLAMA_BUILD_NUMBER=11146" ]
-      [ "LLAMA_BUILD_NUMBER=1" ]
-      previous.preConfigure;
+    preConfigure = ''
+      pushd ${previous.npmRoot}
+      LLAMA_BUILD_NUMBER=1 npm run build
+      popd
+    '';
     cmakeFlags = builtins.filter
       (flag: !(lib.hasPrefix "-DLLAMA_BUILD_NUMBER=" flag
         || lib.hasPrefix "-DLLAMA_BUILD_COMMIT=" flag

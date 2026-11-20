@@ -7,7 +7,7 @@
   fetchFromGitHub,
   fetchPnpmDeps,
   nodejs_22,
-  pnpm_10,
+  pnpm_10_latest,
   pnpmConfigHook,
   # Upstream pins Electron 37.10.3. Supply a compatible Electron 37 build here.
   electron,
@@ -20,7 +20,7 @@
 let
   pname = "pi-gui";
   version = "1.0.1";
-  pnpm = pnpm_10;
+  pnpm = pnpm_10_latest;
 
   src = fetchFromGitHub {
     owner = "fkz";
