@@ -6,6 +6,10 @@
 
 let
   unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  antigravity-hub = (import inputs.nixpkgs-unstable {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    config.allowUnfreePredicate = pkg: lib.getName pkg == "antigravity-hub";
+  }).antigravity-hub;
   npu = import ./npu { inherit pkgs; };
 
   nixos-update = pkgs.writeShellApplication {
@@ -360,6 +364,7 @@ in
     calibre
     unstablePkgs.codex
     unstablePkgs.t3code
+    antigravity-hub
     chatgpt
     (pkgs.callPackage ./pi-gui.nix { })
     gh
