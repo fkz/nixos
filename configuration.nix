@@ -70,18 +70,19 @@ let
     });
 
   llamaNpu = import ./npu/llama-prefill { inherit pkgs npu; };
-  llamaBase = package: package.overrideAttrs (previous: {
-    version = "0.8.0";
+  llamaBase = package: overrideVersionWhenLower package "1.0.0-unstable-2026-11-21" (p: p.overrideAttrs (finalAttrs: previous: {
+    version = "1.0.0-unstable-2026-11-21";
     src = pkgs.fetchFromGitHub {
       owner = "ggml-org";
       repo = "llama.cpp";
-      tag = "v0.8.0";
-      hash = "sha256-WQAtD8Hos6fEtgPQId7nZiLGyP4asAMKJYEXZid1nqc=";
+      rev = "b019be0c86e8adaf8b46627c091c24c1597b95f9";
+      hash = "sha256-ztM/qVmwB/tvmPfqtlq/cQGS+FmdZLPRw1+0IqpyXW8=";
     };
-    npmDepsHash = "sha256-XLtEZsSFdk+2SyfXzBp8HQ2e27PQPpDCn1YjePU1/9w=";
+    npmRoot = "ui/apps/chat";
+    npmDepsHash = "sha256-3kJJJGgPvtoRozjjvXJ97ljxzt0tshwi88UUd1D3VsI=";
     preConfigure = ''
-      pushd ${previous.npmRoot}
-      LLAMA_BUILD_NUMBER=1 npm run build
+      pushd ${finalAttrs.npmRoot}
+      LLAMA_BUILD_NUMBER=12606 npm run build
       popd
     '';
     cmakeFlags = builtins.filter
@@ -89,11 +90,11 @@ let
         || lib.hasPrefix "-DLLAMA_BUILD_COMMIT=" flag
         || lib.hasPrefix "-DLLAMA_BUILD_IS_DEV=" flag))
       previous.cmakeFlags ++ [
-        "-DLLAMA_BUILD_NUMBER=1"
-        "-DLLAMA_BUILD_COMMIT=8642541"
+        "-DLLAMA_BUILD_NUMBER=12606"
+        "-DLLAMA_BUILD_COMMIT=b019be0c"
         "-DLLAMA_BUILD_IS_DEV=OFF"
       ];
-  });
+  }));
   llama-cpp-vulkan = llamaNpu.patch (llamaBase unstablePkgs.llama-cpp-vulkan);
   # Keep HIP separate so backend comparisons use explicit command names.
   llama-cpp-hip = (llamaBase (unstablePkgs.llama-cpp.override {
