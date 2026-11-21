@@ -319,36 +319,7 @@ in
     git
     git-lfs
     vlc
-    (keepassxc.overrideAttrs (finalAttrs: prevAttrs: {
-      version = "331a2de136398f733136c51f1badae5d154878bc";
-      src = prevAttrs.src.override {
-        hash = "sha256-deIg59jSCW5e0WZ5nCTkV46ZK6cwjneA1+3nLlzekE4=";
-        rev = finalAttrs.version;
-        tag = null;
-      };
-
-      patches = prevAttrs.patches ++ [
-        (pkgs.writeText "botan.patch" ''
-          diff --git a/src/sshagent/OpenSSHKeyGen.cpp b/src/sshagent/OpenSSHKeyGen.cpp
-          index a3d88807fb..6212cd0e9d 100644
-          --- a/src/sshagent/OpenSSHKeyGen.cpp
-          +++ b/src/sshagent/OpenSSHKeyGen.cpp
-          @@ -24,6 +24,10 @@
-           #include <botan/ecdsa.h>
-           #include <botan/ed25519.h>
-           #include <botan/rsa.h>
-          +#include <botan/version.h>
-          +#if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(3,11,0)
-          +  #include <botan/ec_group.h>
-          +#endif
-
-           namespace OpenSSHKeyGen
-           {
-        '')
-      ];
-
-      buildInputs = prevAttrs.buildInputs ++ [keyutils];
-    }))
+    keepassxc
     calibre
     #rustc
     rustup
