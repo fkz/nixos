@@ -80,6 +80,9 @@ let
     };
     npmRoot = "ui/apps/chat";
     npmDepsHash = "sha256-3kJJJGgPvtoRozjjvXJ97ljxzt0tshwi88UUd1D3VsI=";
+    patches = (previous.patches or []) ++ [
+      ./patches/llama-pr-32218-inkling2-dspark.patch
+    ];
     preConfigure = ''
       pushd ${finalAttrs.npmRoot}
       LLAMA_BUILD_NUMBER=12606 npm run build
